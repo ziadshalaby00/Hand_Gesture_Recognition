@@ -1,6 +1,6 @@
 ---
 
-# 1. فتح الكاميرا وقراءة الفريمات (Open Camera & Read Frames)
+# 1. فتح الكاميرا وقراءة الفريمات (Open Camera & Read Frames) 
 
 **الهدف**
 
