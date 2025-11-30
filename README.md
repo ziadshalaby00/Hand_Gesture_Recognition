@@ -1,4 +1,4 @@
-# Hand SHift
+# Hand Shift
 
 ---
 
