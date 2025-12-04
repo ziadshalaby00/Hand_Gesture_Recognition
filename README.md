@@ -187,7 +187,7 @@
 11. `draw_contour.py`
 12. `show_label.py`
 13. `small_preview_windows.py`
-14. `Convert_to_PIL.py`
+14. `convert_to_PIL.py`
 
 ---
 
