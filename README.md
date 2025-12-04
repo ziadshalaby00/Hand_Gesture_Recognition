@@ -1,4 +1,4 @@
-# Hand Shift
+# Hand Gesture Recognition
 
 ---
 
@@ -174,17 +174,23 @@
 
 # Algorithm Files Checklist
 
-1. `convert_to_HSV.py`
-2. `color_thresholding.py`
-3. `morphological.py`
-4. `contour_detection.py`
-5. `contour_area_filtering.py`
-6. `convex_hull.py`
-7. `convexity_defects.py`
-8. `hull_drawing.py`
+1. `angle_between.py`
+2. `draw_ROI.py`
+3. `skin_detection.py`
+4. `noise_removal.py`
+5. `find_contours.py`
+6. `find_hand_contour.py`
+7. `draw_convex_hull.py`
+8. `compute_convexity_defects.py`
+9. `count_finger_defects.py`
+10. `hand_state.py`
+11. `draw_contour.py`
+12. `show_label.py`
+13. `small_preview_windows.py`
+14. `Convert_to_PIL.py`
 
 ---
 
-> Proposed Gui: **PySimpleGUI**
+> Proposed Gui: **Tkinter**
 
 ---
