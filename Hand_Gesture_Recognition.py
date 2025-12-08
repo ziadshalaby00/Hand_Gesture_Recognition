@@ -158,7 +158,7 @@ def update_frame():
         color_final = (0, 255, 0) if hand_open else (0, 0, 255)
         
         # Start Action
-        action_on(frame) if hand_open else action_off(frame)
+        action_on() if hand_open else action_off()
         
         # -------------------------
         # Draw contour and label
@@ -173,7 +173,7 @@ def update_frame():
         cv2.putText(frame, "No Hand Detected", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
         
         # Close Action
-        action_off(frame)
+        action_off()
         
     # -------------------------
     # Small preview windows (mask & original)
