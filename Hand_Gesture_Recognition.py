@@ -27,21 +27,8 @@ cap = cv2.VideoCapture(CAM_INDEX)
 # The grid layout reserves space for both video and control sliders.
 root = tk.Tk()
 root.title("Hand Gesture Recognition")
-
-screen_w = root.winfo_screenwidth()
-screen_h = root.winfo_screenheight()
-root.geometry(f"{screen_w}x{screen_h}+0+0")
-
-try:
-    root.state("zoomed")
-except:
-    pass
-
-root.grid_rowconfigure(0, weight=1)
-root.grid_columnconfigure(0, weight=1)
-
 video_label = tk.Label(root)
-video_label.grid(row=0, column=0, columnspan=6, sticky="nsew")
+video_label.grid(row=0, column=0, columnspan=6)
 
 
 # -------------------------
