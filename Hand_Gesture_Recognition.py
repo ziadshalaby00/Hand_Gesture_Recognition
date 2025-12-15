@@ -281,6 +281,29 @@ def update_frame():
         pass
     
     # -------------------------
+    # Action Image (Top-Right Corner)
+    # -------------------------
+    if action_active:
+        overlay = bahget_clear     # hand open → reveal
+    else:
+        overlay = bahget_blurred   # hand closed → blurred
+
+    oh, ow = overlay.shape[:2]
+
+    # Top-right corner (with small margin)
+    x_start = w - ow - 10
+    y_start = 10
+
+    frame[y_start:y_start+oh, x_start:x_start+ow] = overlay
+
+    cv2.rectangle(frame,
+                (x_start, y_start),
+                (x_start+ow, y_start+oh),
+                (0, 255, 255), 2)
+
+
+
+    # -------------------------
     # GUI Frame Update
     # -------------------------
     # Convert the final OpenCV BGR frame to RGB, then to a PIL ImageTk object
@@ -295,16 +318,32 @@ def update_frame():
     
     root.after(30, update_frame)
 
+
+# -------------------------
+# Load Action Image
+# -------------------------
+bahget_clear = cv2.imread("bahget.png")
+bahget_clear = cv2.resize(bahget_clear, (350, 250))
+
+# Create blurred version (default state)
+bahget_blurred = cv2.GaussianBlur(bahget_clear, (31, 31), 0)
+
+action_active = False
+
+
 # -------------------------
 # Action On/Off
 # -------------------------
 # Placeholder functions for custom logic (e.g., triggering LED, sending signal).
 # Override these to integrate with hardware or other systems.
 def action_on():
-    pass
+    global action_active
+    action_active = True
+
 
 def action_off():
-    pass
+    global action_active
+    action_active = False
 
 
 # -------------------------
