@@ -7,11 +7,9 @@ from PIL import Image, ImageTk
 # -------------------------
 # Config
 # -------------------------
-# Core constants that control detection sensitivity and behavior.
-# MIN_CONTOUR_AREA filters out noise by ignoring tiny blobs.
-# DEFECT_DEPTH_RATIO and DEFECT_ANGLE_THRESH jointly validate finger gaps:
-# depth must be proportional to hand size, and the valley must be sharp enough.
-# The 5x5 kernel is used in morphological operations to clean the skin mask.
+# General configuration parameters for the application.
+# Includes camera index, contour area thresholds, and convexity defect criteria.
+# The kernel is used for morphological operations to clean up the skin-color mask.
 CAM_INDEX = 0
 MIN_CONTOUR_AREA = 2000
 DEFECT_DEPTH_RATIO = 0.008
@@ -23,8 +21,9 @@ cap = cv2.VideoCapture(CAM_INDEX)
 # -------------------------
 # Tkinter GUI Setup
 # -------------------------
-# Basic GUI window with a label to display the live video feed.
-# The grid layout reserves space for both video and control sliders.
+# Initializes the main application window using Tkinter.
+# Creates a label to display the live camera feed.
+# The layout is prepared to hold both video and control widgets.
 root = tk.Tk()
 root.title("Hand Gesture Recognition")
 video_label = tk.Label(root)
@@ -34,9 +33,9 @@ video_label.grid(row=0, column=0, columnspan=6)
 # -------------------------
 # HSV Sliders (Tkinter)
 # -------------------------
-# Interactive HSV threshold sliders for real-time skin-color tuning.
-# OpenCV uses H∈[0,179], S/V∈[0,255]. Default values target typical light-to-olive skin tones.
-# These allow on-the-fly calibration under varying lighting conditions.
+# Interactive sliders allow real-time adjustment of HSV skin-color thresholds.
+# Users can fine-tune H (hue), S (saturation), and V (value) ranges for better hand segmentation.
+# Default values are set to typical skin-tone ranges under normal lighting.
 h_low = tk.Scale(root, from_=0, to=179, orient="horizontal", label="H Low")
 h_low.set(0)
 h_low.grid(row=1, column=0, sticky="ew")
@@ -63,12 +62,11 @@ v_high.grid(row=1, column=5, sticky="ew")
 
 
 # -------------------------
-# Helper Function: Angle Calculation
+# Angle Calculation
 # -------------------------
-# Computes the interior angle (in degrees) at point p2 formed by points (p1, p2, p3).
-# Uses the law of cosines with numerical safeguards:
-# - Handles degenerate cases (zero-length edges) by returning 180°.
-# - Clips cosine values to [-1, 1] to prevent NaN from arccos due to floating-point errors.
+# Computes the angle (in degrees) at the farthest point of a convexity defect.
+# Used to distinguish real finger valleys from noise or minor contour irregularities.
+# Uses the law of cosines on three points: two hull points and one defect point.
 def angle_between(p1, p2, p3):
     a = np.linalg.norm(p2 - p3)
     b = np.linalg.norm(p2 - p1)
@@ -86,29 +84,17 @@ def angle_between(p1, p2, p3):
 # -------------------------
 # Main Frame Update Function
 # -------------------------
-# The core real-time processing loop:
-# 1. Captures and mirrors the frame for natural interaction.
-# 2. Defines a fixed ROI (top-left) to reduce computation and avoid background interference.
-# 3. Converts to HSV and applies dynamic skin-color masking using slider values.
-# 4. Refines the mask using Gaussian blur and morphological operations (open/close/dilate)
-#    to remove noise and fill holes while preserving hand shape.
-# 5. Finds the largest valid contour (hand candidate) based on area constraints.
-# 6. If a hand is found, computes its convex hull and convexity defects.
-#    Each defect is validated by depth (relative to hand area) and tip angle—
-#    only sharp, deep valleys are counted as finger gaps.
-# 7. Classifies hand as "Open" if ≥2 valid defects (typically 4 fingers → 3–4 defects).
-# 8. Triggers action_on() or action_off() based on state.
-# 9. Overlays debugging visuals: hull, defect points, state label.
-# 10. Adds small previews (original + mask) at the bottom for tuning feedback.
-# 11. Converts frame to PIL format and updates Tkinter display.
-# Runs every ~30ms via root.after() for smooth video.
+# Core loop that captures, processes, and displays each video frame in real time.
+# Performs hand detection, contour analysis, and gesture classification.
+# Updates the Tkinter GUI with annotated video and debug previews.
 def update_frame():
     
     # -------------------------
     # Frame Capture & Validation
     # -------------------------
-    # Grab a new frame from the camera. If capture fails (e.g., camera disconnected),
-    # skip processing and reschedule the next update to keep the loop alive.
+    # Reads a frame from the camera; skips processing if capture fails.
+    # Ensures robustness against camera disconnection or driver issues.
+    # Uses a non-blocking callback via root.after() to maintain GUI responsiveness.
     ret, frame = cap.read()
     if not ret or frame is None:
         root.after(30, update_frame)
@@ -117,8 +103,9 @@ def update_frame():
     # -------------------------
     # Frame Mirroring & Backup
     # -------------------------
-    # Mirror the frame horizontally for natural user interaction (like a mirror).
-    # Keep a copy of the original for the small preview thumbnail later.
+    # Horizontally flips the frame to mimic a mirror (natural for gesture interaction).
+    # Keeps an unmodified copy for debugging previews later in the pipeline.
+    # Stores frame dimensions for ROI and overlay positioning.
     frame = cv2.flip(frame, 1)
     frame_copy = frame.copy()
     h, w = frame.shape[:2]
@@ -126,9 +113,9 @@ def update_frame():
     # -------------------------
     # Region of Interest (ROI) Setup
     # -------------------------
-    # Define a fixed top-left ROI to limit processing area, reduce noise,
-    # and avoid interference from background objects. Draw a blue rectangle
-    # to visually indicate the active zone to the user.
+    # Defines a fixed region where hand detection is performed (reduces noise from background).
+    # Draws a blue bounding box to visually indicate the active area to the user.
+    # Crops the working frame to this region for efficient processing.
     ROI_W = (w // 2)
     ROI_H = (h * 4) // 5
     x1 = 10
@@ -141,9 +128,9 @@ def update_frame():
     # -------------------------
     # Dynamic Skin Color Masking (HSV)
     # -------------------------
-    # Convert ROI to HSV color space and apply a binary mask using live
-    # slider values. This allows real-time tuning of skin detection under
-    # different lighting or skin tones without restarting the app.
+    # Converts the ROI to HSV color space for robust skin-tone segmentation.
+    # Applies real-time HSV thresholds from user-adjustable sliders.
+    # Generates a binary mask where white pixels correspond to potential skin regions.
     hsv = cv2.cvtColor(work_frame, cv2.COLOR_BGR2HSV)
     
     hL = h_low.get()
@@ -158,12 +145,9 @@ def update_frame():
     # -------------------------
     # Mask Refinement Pipeline
     # -------------------------
-    # Clean the binary mask in stages:
-    # 1. Gaussian blur to soften edges and reduce sensor noise.
-    # 2. Morphological opening to remove small specks.
-    # 3. Closing to fill holes inside the hand region.
-    # 4. Final dilation to reconnect slightly broken contours.
-    # This pipeline ensures a solid, noise-free hand silhouette.
+    # Applies Gaussian blur to reduce noise in the mask.
+    # Uses morphological opening to remove small specks and closing to fill holes.
+    # Final dilation slightly expands the mask to reconnect fragmented hand regions.
     mask = cv2.GaussianBlur(mask, (7, 7), 0)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=1)
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=2)
@@ -172,11 +156,9 @@ def update_frame():
     # -------------------------
     # Hand Contour Selection
     # -------------------------
-    # Find all external contours and sort by area (largest first).
-    # Pick the first contour that is:
-    # - Large enough to be a hand (≥ MIN_CONTOUR_AREA)
-    # - Not too large (avoids full-background false positives)
-    # This balances robustness and precision in detection.
+    # Finds all external contours in the refined mask.
+    # Selects the largest contour that meets area criteria (not too small, not the whole frame).
+    # This contour is assumed to represent the user's hand if valid.
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     hand_detected = False
     hand_open = False
@@ -196,13 +178,11 @@ def update_frame():
     # -------------------------
     # Hand Geometry Analysis (If Detected)
     # -------------------------
-    # When a hand is found:
-    # - Compute its convex hull (outer boundary).
-    # - Calculate convexity defects (indentations between fingers).
-    # - For each defect, validate using two criteria:
-    #     * Depth > DEFECT_DEPTH_RATIO × hand area → ensures it's significant.
-    #     * Tip angle < DEFECT_ANGLE_THRESH → ensures it's sharp (not a curve).
-    # Valid defects are counted as finger gaps. Mark them with red dots.
+    # Computes the convex hull of the hand contour to find finger valleys (defects).
+    # For each defect, checks angle and depth to filter out false positives.
+    # Counts valid defects to estimate the number of extended fingers.
+    fingers_defects = 0
+    
     if hand_detected:
         hull_points = cv2.convexHull(max_contour)
         cv2.drawContours(frame, [hull_points + [x1, y1]], -1, (255, 255, 0), 2)
@@ -210,7 +190,6 @@ def update_frame():
         hull_idx = cv2.convexHull(max_contour, returnPoints=False)
         defects = cv2.convexityDefects(max_contour, hull_idx)
         
-        fingers_defects = 0
         if defects is not None:
             for d in defects[:, 0]:
                 s, e, f, depth = d
@@ -227,35 +206,36 @@ def update_frame():
         # -------------------------
         # Hand State Classification
         # -------------------------
-        # Heuristic: ≥2 valid defects → "Open hand" (typically 3–4 for spread fingers).
-        # Fewer → "Closed" (fist or partial grip). Trigger corresponding actions
-        # and overlay a colored status label on the main feed.
-        hand_open = fingers_defects >= 2
+        # Classifies hand as "Open" if exactly 4 valid defects (i.e., 5 fingers) are detected.
+        # Displays real-time feedback on hand state and estimated finger count.
+        # Visual indicators (text and color) help the user understand system interpretation.
+        hand_open = fingers_defects == 4
+        fingers_counts = fingers_defects + 1 if fingers_defects >= 1 else 'One finger or none'
+        
         final_state = "Open" if hand_open else "Closed"
         color_final = (0, 255, 0) if hand_open else (0, 0, 255)
         
-        action_on() if hand_open else action_off()
-        
         cv2.drawContours(frame, [max_contour + [x1, y1]], -1, (255, 0, 0), 2)
+        
         cv2.putText(frame, f"Hand: {final_state}", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color_final, 3)
+        cv2.putText(frame, f"Fingers: {fingers_counts}", (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0,165,165), 2)
     
     else:
         # -------------------------
         # No Hand Detected Handling
         # -------------------------
-        # Display a warning message and ensure the "off" action is triggered.
-        # This provides clear feedback and prevents stale state if the hand leaves ROI.
+        # Displays a warning message when no valid hand contour is found.
+        # Helps the user adjust position or lighting conditions.
+        # Shows "None" for finger count to indicate absence of gesture input.
         cv2.putText(frame, "No Hand Detected", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-        action_off()
+        cv2.putText(frame, f"Fingers: None", (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0,165,165), 2)
         
     # -------------------------
     # Debug Previews (Mask & Original)
     # -------------------------
-    # Embed two small thumbnails at the bottom of the main frame:
-    # - Left: processed skin mask (for tuning HSV sliders)
-    # - Right: original unprocessed frame
-    # Enclosed in white borders for visibility. Wrapped in try/except
-    # to prevent crashes if frame dimensions change unexpectedly.
+    # Embeds small previews of the original frame and binary mask in the bottom corners.
+    # Useful for tuning HSV sliders and diagnosing segmentation issues.
+    # Resizes previews to avoid obstructing the main view.
     try:
         small_w = w // 5
         small_h = int(h / 6)
@@ -283,10 +263,24 @@ def update_frame():
     # -------------------------
     # Action Image (Top-Right Corner)
     # -------------------------
-    if action_active:
-        overlay = bahget_clear     # hand open → reveal
+    # Overlays a preprocessed image (e.g., filtered version of 'bahget.png') based on finger count.
+    # Each gesture (1–5 fingers) triggers a different visual filter for interactive feedback.
+    # The overlay is positioned in the top-right corner with a labeled border.
+    if fingers_defects == 1:
+        overlay = sepia
+        filterr = 'Sepia'
+    elif fingers_defects == 2:
+        overlay = posterized
+        filterr = 'Posterized'
+    elif fingers_defects == 3:
+        overlay = heatmap
+        filterr = 'Heatmap'
+    elif fingers_defects == 4:
+        overlay = bahget_clear
+        filterr = 'Clear'
     else:
-        overlay = bahget_blurred   # hand closed → blurred
+        overlay = bahget_blurred
+        filterr = 'Blurred'
 
     oh, ow = overlay.shape[:2]
 
@@ -301,14 +295,16 @@ def update_frame():
                 (x_start+ow, y_start+oh),
                 (0, 255, 255), 2)
 
+    cv2.putText(frame, f"Filter: {filterr}", (20, 150), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (123,123,73), 2)
+
 
 
     # -------------------------
     # GUI Frame Update
     # -------------------------
-    # Convert the final OpenCV BGR frame to RGB, then to a PIL ImageTk object
-    # compatible with Tkinter. Update the label and schedule the next frame
-    # after ~30ms (~33 FPS) to maintain smooth real-time video.
+    # Converts the processed OpenCV (BGR) frame to PIL-compatible RGB format.
+    # Wraps it in a PhotoImage for display in the Tkinter label.
+    # Schedules the next frame update after 30ms to maintain real-time interaction.
     img_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     im_pil = Image.fromarray(img_rgb)
     imgtk = ImageTk.PhotoImage(image=im_pil)
@@ -320,37 +316,39 @@ def update_frame():
 
 
 # -------------------------
-# Load Action Image
+# Image Filters
 # -------------------------
+# Precomputes several stylized versions of a reference image ('bahget.png').
+# Includes effects like blur, sepia, posterization, and heatmap for gesture-based switching.
+# All filtered images are resized to a consistent dimension for seamless overlay.
 bahget_clear = cv2.imread("bahget.png")
 bahget_clear = cv2.resize(bahget_clear, (350, 250))
 
 # Create blurred version (default state)
-bahget_blurred = cv2.GaussianBlur(bahget_clear, (31, 31), 0)
+bahget_blurred = cv2.GaussianBlur(bahget_clear, (63, 63), 0)
 
-action_active = False
+# Create heatmap version
+heatmap = cv2.applyColorMap(cv2.cvtColor(bahget_clear, cv2.COLOR_BGR2GRAY), cv2.COLORMAP_JET)
 
+# Create sepia version
+sepia_filter = np.array([[0.272, 0.534, 0.131],
+                         [0.349, 0.686, 0.168],
+                         [0.393, 0.769, 0.189]])
+sepia = cv2.transform(bahget_clear, sepia_filter)
+sepia = np.clip(sepia, 0, 255).astype(np.uint8)
 
-# -------------------------
-# Action On/Off
-# -------------------------
-# Placeholder functions for custom logic (e.g., triggering LED, sending signal).
-# Override these to integrate with hardware or other systems.
-def action_on():
-    global action_active
-    action_active = True
-
-
-def action_off():
-    global action_active
-    action_active = False
+# Create posterized version
+levels = 4
+posterized = np.floor_divide(bahget_clear, 256//levels) * (256//levels)
+posterized = posterized.astype(np.uint8)
 
 
 # -------------------------
 # Start Main Loop
 # -------------------------
-# Launches the real-time processing loop and GUI event handling.
-# update_frame() is called once to start the cycle; root.mainloop() keeps the window alive.
+# Launches the Tkinter event loop and begins real-time video processing.
+# The GUI remains responsive to slider adjustments and window events.
+# This is the entry point for the interactive application.
 update_frame()
 root.mainloop()
 
@@ -358,6 +356,8 @@ root.mainloop()
 # -------------------------
 # Cleanup Resources
 # -------------------------
-# Releases camera and closes any OpenCV windows after GUI exits.
+# Releases the camera handle and closes any OpenCV-created windows.
+# Ensures clean termination and prevents resource leaks after closing the app.
+# Note: These lines may not execute if the user force-quits the GUI.
 cap.release()
 cv2.destroyAllWindows()
