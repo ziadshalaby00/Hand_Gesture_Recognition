@@ -28,13 +28,9 @@ cap = cv2.VideoCapture(CAM_INDEX)
 root = tk.Tk()
 root.title("Hand Gesture Recognition")
 
-# Full screen
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
-root.geometry(f"{screen_width}x{screen_height}")
-root.attributes('-fullscreen', True)
-
-root.bind("<Escape>", lambda e: root.attributes("-fullscreen", False))
+root.geometry(f"{screen_width}x{screen_height - 100}")
 
 # -------------------------
 # Main Layout Frames
@@ -42,7 +38,7 @@ root.bind("<Escape>", lambda e: root.attributes("-fullscreen", False))
 video_frame = tk.Frame(root, bg="black")
 video_frame.pack(side="top", fill="both", expand=True)
 
-controls_frame = tk.Frame(root, bg="#222", height=200)
+controls_frame = tk.Frame(root, bg="#222", height=85)
 controls_frame.pack(side="bottom", fill="x")
 
 spacer = tk.Frame(root, height=15, bg="black")
@@ -143,9 +139,7 @@ def update_frame():
     frame = cv2.flip(frame, 1)
     frame_copy = frame.copy()
 
-    # Resize frame to fit only video area (exclude controls frame)
-    CONTROLS_HEIGHT = 100
-    video_height = screen_height - CONTROLS_HEIGHT
+    video_height = screen_height - 200
     frame = cv2.resize(frame, (screen_width, video_height))
 
     h, w = frame.shape[:2]
