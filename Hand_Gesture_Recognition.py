@@ -9,7 +9,8 @@ from PIL import Image, ImageTk
 # -------------------------
 # General configuration parameters for the application.
 # Includes camera index, contour area thresholds, and convexity defect criteria.
-# The kernel is used for morphological operations to clean up the skin-color mask.
+# The kernel is used for morphological operations to 
+# clean up the skin-color mask.
 CAM_INDEX = 0
 MIN_CONTOUR_AREA = 2000
 DEFECT_DEPTH_RATIO = 0.008
@@ -26,8 +27,29 @@ cap = cv2.VideoCapture(CAM_INDEX)
 # The layout is prepared to hold both video and control widgets.
 root = tk.Tk()
 root.title("Hand Gesture Recognition")
-video_label = tk.Label(root)
-video_label.grid(row=0, column=0, columnspan=6)
+
+# Full screen
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
+root.geometry(f"{screen_width}x{screen_height}")
+root.attributes('-fullscreen', True)
+
+root.bind("<Escape>", lambda e: root.attributes("-fullscreen", False))
+
+# -------------------------
+# Main Layout Frames
+# -------------------------
+video_frame = tk.Frame(root, bg="black")
+video_frame.pack(side="top", fill="both", expand=True)
+
+controls_frame = tk.Frame(root, bg="#222", height=200)
+controls_frame.pack(side="bottom", fill="x")
+
+spacer = tk.Frame(root, height=15, bg="black")
+spacer.pack(side="top", fill="x")
+
+video_label = tk.Label(video_frame)
+video_label.pack(fill="both", expand=True)
 
 
 # -------------------------
@@ -36,29 +58,41 @@ video_label.grid(row=0, column=0, columnspan=6)
 # Interactive sliders allow real-time adjustment of HSV skin-color thresholds.
 # Users can fine-tune H (hue), S (saturation), and V (value) ranges for better hand segmentation.
 # Default values are set to typical skin-tone ranges under normal lighting.
-h_low = tk.Scale(root, from_=0, to=179, orient="horizontal", label="H Low")
+h_low = tk.Scale(controls_frame, from_=0, to=179,
+                 orient="horizontal", label="H Low",
+                 length=250)
 h_low.set(0)
-h_low.grid(row=1, column=0, sticky="ew")
+h_low.pack(side="left", padx=5)
 
-h_high = tk.Scale(root, from_=0, to=179, orient="horizontal", label="H High")
+h_high = tk.Scale(controls_frame, from_=0, to=179,
+                  orient="horizontal", label="H High",
+                  length=250)
 h_high.set(20)
-h_high.grid(row=1, column=1, sticky="ew")
+h_high.pack(side="left", padx=5)
 
-s_low = tk.Scale(root, from_=0, to=255, orient="horizontal", label="S Low")
+s_low = tk.Scale(controls_frame, from_=0, to=255,
+                 orient="horizontal", label="S Low",
+                 length=250)
 s_low.set(30)
-s_low.grid(row=1, column=2, sticky="ew")
+s_low.pack(side="left", padx=5)
 
-s_high = tk.Scale(root, from_=0, to=255, orient="horizontal", label="S High")
+s_high = tk.Scale(controls_frame, from_=0, to=255,
+                  orient="horizontal", label="S High",
+                  length=250)
 s_high.set(150)
-s_high.grid(row=1, column=3, sticky="ew")
+s_high.pack(side="left", padx=5)
 
-v_low = tk.Scale(root, from_=0, to=255, orient="horizontal", label="V Low")
+v_low = tk.Scale(controls_frame, from_=0, to=255,
+                 orient="horizontal", label="V Low",
+                 length=250)
 v_low.set(60)
-v_low.grid(row=1, column=4, sticky="ew")
+v_low.pack(side="left", padx=5)
 
-v_high = tk.Scale(root, from_=0, to=255, orient="horizontal", label="V High")
+v_high = tk.Scale(controls_frame, from_=0, to=255,
+                  orient="horizontal", label="V High",
+                  length=250)
 v_high.set(255)
-v_high.grid(row=1, column=5, sticky="ew")
+v_high.pack(side="left", padx=5)
 
 
 # -------------------------
@@ -108,7 +142,14 @@ def update_frame():
     # Stores frame dimensions for ROI and overlay positioning.
     frame = cv2.flip(frame, 1)
     frame_copy = frame.copy()
+
+    # Resize frame to fit only video area (exclude controls frame)
+    CONTROLS_HEIGHT = 100
+    video_height = screen_height - CONTROLS_HEIGHT
+    frame = cv2.resize(frame, (screen_width, video_height))
+
     h, w = frame.shape[:2]
+
     
     # -------------------------
     # Region of Interest (ROI) Setup
