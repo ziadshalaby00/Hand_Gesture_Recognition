@@ -224,7 +224,6 @@ def update_frame():
         
         hull_idx = cv2.convexHull(max_contour, returnPoints=False)
         defects = cv2.convexityDefects(max_contour, hull_idx)
-        
         if defects is not None:
             for d in defects[:, 0]:
                 s, e, f, depth = d
@@ -275,8 +274,8 @@ def update_frame():
         small_w = w // 5
         small_h = int(h / 6)
         
-        mask_rgb = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
-        mask_small = cv2.resize(mask_rgb, (small_w, small_h))
+        mask_bgr = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR)
+        mask_small = cv2.resize(mask_bgr, (small_w, small_h))
         frame_small = cv2.resize(frame_copy, (small_w, small_h))
         
         y1 = h - small_h - 7
@@ -363,18 +362,28 @@ bahget_clear = cv2.resize(bahget_clear, (350, 250))
 bahget_blurred = cv2.GaussianBlur(bahget_clear, (63, 63), 0)
 
 # Create heatmap version
+# COLORMAP_JET:
+#   src => gray => (0 -> 255)
+#   0 -> blue
+#   128 -> green / yellow
+#   255 -> red
 heatmap = cv2.applyColorMap(cv2.cvtColor(bahget_clear, cv2.COLOR_BGR2GRAY), cv2.COLORMAP_JET)
 
 # Create sepia version
-sepia_filter = np.array([[0.272, 0.534, 0.131],
-                         [0.349, 0.686, 0.168],
-                         [0.393, 0.769, 0.189]])
+                        #   R      G      B
+sepia_filter = np.array([[0.272, 0.534, 0.131],   # B
+                         [0.349, 0.686, 0.168],   # G
+                         [0.393, 0.769, 0.189]])  # R
 sepia = cv2.transform(bahget_clear, sepia_filter)
 sepia = np.clip(sepia, 0, 255).astype(np.uint8)
 
 # Create posterized version
 levels = 4
-posterized = np.floor_divide(bahget_clear, 256//levels) * (256//levels)
+# 0 – 63   → 0
+# 64 –127  → 64
+# 128–191  → 128
+# 192–255  → 192
+posterized = np.floor_divide(bahget_clear, 256//levels) * (256//levels) # Quantization
 posterized = posterized.astype(np.uint8)
 
 
