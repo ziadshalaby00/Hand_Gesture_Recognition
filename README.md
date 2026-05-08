@@ -81,3 +81,10 @@ python core.py
 
 * Both backend servers must be running before refreshing the browser
 * A short delay or slight lag at startup is normal until everything connects
+
+---
+
+### License
+
+MIT License © 2026 Ziad Ahmed Shalaby
+
