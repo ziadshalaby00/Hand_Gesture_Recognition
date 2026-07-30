@@ -8,6 +8,10 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById("scene"), antialias: true });
 
+const cameraFPS = document.getElementById("pipeline-fps");
+const inferenceMS = document.getElementById("inference-ms");
+const processingMS = document.getElementById("processing-ms");
+
 renderer.setSize(window.innerWidth, window.innerHeight * 0.55);
 camera.position.set(0, 1, 5);
 
@@ -155,6 +159,7 @@ socket.on("connect", () => {
 const img = document.getElementById("frame");
 const frameInfo = document.getElementById("frame-info");
 
+let lastUIUpdate = 0;
 // ==============
 // Real-time Hand Data Handler: Animation Trigger and UI Rendering
 // ==============
@@ -171,15 +176,24 @@ socket.on("hand_data", (data) => {
             targetX += STEP;
         }
 
+        const now = performance.now();
+        if (now - lastUIUpdate > 500) {
+            cameraFPS.textContent = data.pipeline_fps;
+            inferenceMS.textContent = `${data.inference_ms} ms`;
+            processingMS.textContent = `${data.processing_ms} ms`;
+
+            lastUIUpdate = now;
+        }
+
         let hand_present_color =
             data["hand_present"] === "Yes"
                 ? "rgb(20, 238, 12)"
-                : "rgb(78, 3, 3)";
+                : "#c12323";
 
         let status_text_color =
             data["status_text"] === "Open"
                 ? "rgb(20, 238, 12)"
-                : "rgb(78, 3, 3)";
+                : "#c12323";
 
         frameInfo.innerHTML = `
             <span class="sp-1">Hand Present:
@@ -195,13 +209,13 @@ socket.on("hand_data", (data) => {
             </span>
 
             <span class="sp-1">Fingers Count:
-                <span class="sp-2" style="color: rgb(11, 14, 168);">
+                <span class="sp-2" style="color: #0ec7e7;">
                     ${data["fingers_count"]}
                 </span>
             </span>
 
             <span class="sp-1">Robot Action:
-                <span class="sp-2" style="color: rgb(11, 14, 168);">
+                <span class="sp-2" style="color: #0ec7e7;">
                     ${data["robot_action"]}
                 </span>
             </span>

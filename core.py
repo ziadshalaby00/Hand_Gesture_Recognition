@@ -100,14 +100,24 @@ last_x = None
 last_time = 0
 latest_frame = None
 
+# ==============
+# Performance Metrics
+# ==============
+prev_frame_time = time.perf_counter()
+pipeline_fps = 0
+inference_avg = 0.0
+processing_avg = 0.0
 
 # ==============
 # Main Frame Processing Loop
 # ==============
 def update_frame():
     global last_time, latest_frame, last_x, history
+    global prev_frame_time, pipeline_fps, inference_avg, processing_avg
 
     while True:
+        loop_start = time.perf_counter()
+        
         ret, frame = cap.read()
         if not ret:
             continue
@@ -124,8 +134,14 @@ def update_frame():
             data=rgb_frame
         )
 
+        inference_start = time.perf_counter()
+        
         timestamp_ms = int(time.time() * 1000)
         result = detector.detect_for_video(mp_image, timestamp_ms)
+        
+        inference_ms = (
+            time.perf_counter() - inference_start
+        ) * 1000
 
         # ==============
         # Default State Values
@@ -198,6 +214,21 @@ def update_frame():
         # Frame Transmission to Video Server
         # ==============
         set_frame(frame)
+        
+        
+        current_time = time.perf_counter()
+        fps = 1 / (current_time - prev_frame_time)
+        pipeline_fps = pipeline_fps * 0.9 + fps * 0.1
+        
+        prev_frame_time = current_time
+        
+        processing_ms = (
+            time.perf_counter() - loop_start
+        ) * 1000
+        
+     
+        inference_avg = inference_avg * 0.9 + inference_ms * 0.1
+        processing_avg = processing_avg * 0.9 + processing_ms * 0.1
 
         # ==============
         # Hand Data Transmission to Robot Client
@@ -207,7 +238,11 @@ def update_frame():
                 "hand_present": hand_present,
                 "status_text": status_text,
                 "fingers_count": fingers_count,
-                "robot_action": robot_action
+                "robot_action": robot_action,
+
+                "pipeline_fps": round(pipeline_fps, 1),
+                "inference_ms": round(inference_avg, 2),
+                "processing_ms": round(processing_avg, 2),
             },
             last_time,
             20

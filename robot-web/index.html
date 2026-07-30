@@ -1,60 +1,108 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
-<!-- ============== -->
-<!-- Document Head: Metadata and External Resources -->
-<!-- ============== -->
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Robot Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
 
 <body>
 
-  <!-- ============== -->
-  <!-- Main Application Container -->
-  <!-- ============== -->
-  <div id="container" class="container">
+  <div id="container" class="app-container">
     
-    <!-- ============== -->
-    <!-- Three.js 3D Scene Canvas -->
-    <!-- ============== -->
-    <canvas id="scene"></canvas>
-    
-    <!-- ============== -->
-    <!-- Frame Display Container (Video + Info Panel) -->
-    <!-- ============== -->
-    <div id="frame-container" class="frame-container">
-      
-      <!-- ============== -->
-      <!-- Dynamic Info Panel Placeholder -->
-      <!-- ============== -->
-      <div id="frame-info" class="frame-info">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <h1>Robot Control Center</h1>
       </div>
+      <div class="connection-pill">
+        <span class="pulse-dot"></span>
+        <span>System Online</span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
       
-      <!-- ============== -->
-      <!-- Live Video Stream from FastAPI Server -->
-      <!-- ============== -->
-      <img id="frame" class="frame" src="http://localhost:5000/video" alt="">
-    </div>
+      <!-- 3D Viewport -->
+      <div class="viewport-panel">
+        <div class="viewport-grid"></div>
+        <canvas id="scene"></canvas>
+        
+        <!-- Performance Overlay -->
+        <div class="info-card glass">
+          <div class="card-header">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <h3>Performance</h3>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Pipeline FPS</span>
+            <span class="metric-value" id="pipeline-fps">0</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Inference</span>
+            <span class="metric-value" id="inference-ms">0 ms</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Processing</span>
+            <span class="metric-value" id="processing-ms">0 ms</span>
+          </div>
+        </div>
+
+        <!-- Viewport Label -->
+        <div class="viewport-badge">
+          <span class="badge-dot"></span>
+          <span>3D Simulation</span>
+        </div>
+      </div>
+
+      <!-- Bottom Section -->
+      <div class="bottom-section">
+        
+        <!-- Video Panel -->
+        <div class="video-panel">
+          <div class="panel-header">
+            <div class="header-left">
+              <span class="live-indicator"></span>
+              <span class="header-title">Live Camera Feed</span>
+            </div>
+            <span class="header-meta">MJPEG Stream</span>
+          </div>
+          <div class="video-wrapper">
+            <img id="frame" src="http://localhost:5000/video" alt="Live Camera Stream">
+          </div>
+        </div>
+
+        <!-- Telemetry Panel -->
+        <div id="frame-info" class="telemetry-panel">
+          <!-- Injected by JS -->
+        </div>
+        
+      </div>
+    </main>
   </div>
 
-  <!-- ============== -->
-  <!-- Three.js Module Import Map Configuration -->
-  <!-- ============== -->
   <script type="importmap">
   {
-      "imports": {
+    "imports": {
       "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
       "three/examples/jsm/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-      }
+    }
   }
   </script>
-  
-  <!-- ============== -->
-  <!-- Main Application Logic Module -->
-  <!-- ============== -->
   <script type="module" src="main.js"></script>
 
 </body>
