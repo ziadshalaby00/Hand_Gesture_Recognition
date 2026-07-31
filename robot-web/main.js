@@ -35,7 +35,7 @@ const loader = new GLTFLoader();
 
 let targetX = 0;
 let moveSpeed = 0.05;
-const STEP = 0.1;
+const STEP = 0.15;
 
 // ==============
 // Animation File Paths Configuration
@@ -58,11 +58,12 @@ loader.load("./source/sin_nombre1.glb", (gltf) => {
     
     const box = new THREE.Box3().setFromObject(robot);
     const center = box.getCenter(new THREE.Vector3());
-    robot.scale.set(0.5, 0.5, 0.5);
+    robot.scale.set(0.7, 0.7, 0.5);
     robot.position.sub(center);
     robot.position.y = -1; 
 
     scene.add(robot);
+    console.log(robot);
 
     mixer = new THREE.AnimationMixer(robot);
 

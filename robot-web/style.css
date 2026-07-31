@@ -5,8 +5,8 @@
   --bg-primary: #03040a;
   --bg-secondary: #0a0e1a;
   --bg-card: rgba(10, 14, 26, 0.75);
-  --border-subtle: rgba(56, 189, 248, 0.12);
-  --border-glow: rgba(56, 189, 248, 0.25);
+  --border-subtle: rgba(56, 191, 248, 0.5);
+  --border-glow: rgba(56, 189, 248, 0.5);
   --accent: #38bdf8;
   --accent-glow: rgba(56, 189, 248, 0.4);
   --success: #4ade80;
@@ -49,7 +49,7 @@ body {
    Header
    ============================================ */
 .app-header {
-  height: 52px;
+  height: 60px;
   background: rgba(5, 6, 12, 0.85);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-subtle);
@@ -68,8 +68,8 @@ body {
 }
 
 .brand-icon {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(56, 189, 248, 0.05));
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
@@ -80,7 +80,7 @@ body {
 }
 
 .brand h1 {
-  font-size: 15px;
+  font-size: 22px;
   font-weight: 600;
   letter-spacing: 0.5px;
   color: var(--text-primary);
@@ -94,15 +94,15 @@ body {
   background: rgba(74, 222, 128, 0.08);
   border: 1px solid rgba(74, 222, 128, 0.2);
   border-radius: 100px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--success);
   letter-spacing: 0.3px;
 }
 
 .pulse-dot {
-  width: 7px;
-  height: 7px;
+  width: 12px;
+  height: 12px;
   background: var(--success);
   border-radius: 50%;
   box-shadow: 0 0 8px var(--success), 0 0 16px rgba(74, 222, 128, 0.3);
@@ -173,7 +173,7 @@ body {
   background: rgba(10, 14, 26, 0.8);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -183,8 +183,8 @@ body {
 }
 
 .badge-dot {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   background: var(--accent);
   border-radius: 50%;
   box-shadow: 0 0 6px var(--accent-glow);
@@ -197,7 +197,7 @@ body {
   position: absolute;
   top: 16px;
   right: 16px;
-  width: 240px;
+  width: 270px;
   background: rgba(10, 14, 26, 0.65);
   backdrop-filter: blur(24px) saturate(1.2);
   border: 1px solid var(--border-glow);
@@ -226,7 +226,7 @@ body {
 }
 
 .card-header h3 {
-  font-size: 11px;
+  font-size: 19px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1.5px;
@@ -251,7 +251,7 @@ body {
 }
 
 .metric-label {
-  font-size: 12px;
+  font-size: 17px;
   font-weight: 500;
   color: var(--text-secondary);
   letter-spacing: 0.2px;
@@ -259,7 +259,7 @@ body {
 
 .metric-value {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
   background: rgba(56, 189, 248, 0.08);
@@ -298,7 +298,7 @@ body {
 }
 
 .panel-header {
-  height: 40px;
+  height: 45px;
   background: rgba(5, 6, 12, 0.6);
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
@@ -315,8 +315,8 @@ body {
 }
 
 .live-indicator {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   background: var(--danger);
   border-radius: 50%;
   box-shadow: 0 0 8px var(--danger), 0 0 16px rgba(248, 113, 113, 0.3);
@@ -324,7 +324,7 @@ body {
 }
 
 .header-title {
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -333,7 +333,7 @@ body {
 
 .header-meta {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 14px;
   color: var(--text-muted);
   background: rgba(255, 255, 255, 0.03);
   padding: 3px 8px;
@@ -377,11 +377,11 @@ body {
    Telemetry Panel (frame-info)
    ============================================ */
 .telemetry-panel {
-  width: 320px;
+  width: 345px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: 16px;
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -399,7 +399,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 13px;
+  font-size: 20px;
   font-weight: 500;
   color: var(--text-secondary);
   padding: 12px 16px;
@@ -436,7 +436,7 @@ body {
 
 .sp-2 {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 18px;
   font-weight: 600;
   padding: 4px 10px;
   border-radius: 6px;
