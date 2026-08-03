@@ -1,90 +1,113 @@
-# Vision-Based Human-Robot Interaction System Using Hand Gestures
+# Vision-Based Human-Robot Interaction System
 
-## Basic files
-- socket_io_server.py
-- video_server.py
-- robot_3d.py
-- core.py
-- robot-web/
-- - index.html 
-- - style.css 
-- - main.js 
+A real-time hand gesture recognition system that controls a 3D humanoid robot through computer vision. The system captures hand landmarks via webcam, interprets gestures into robot commands, and streams both the camera feed and 3D animation to a web dashboard.
 
+---
 
-## Project Setup & Run Guide
+## How It Works
 
-### 1. Create Virtual Environment
+The pipeline captures live video, detects hand landmarks using **MediaPipe**, maps finger counts and palm position to robot actions, then broadcasts the data to a web interface where a 3D character performs the corresponding animation in real time.
 
-First, create a Python virtual environment:
+---
+
+## Gesture → Action Mapping
+
+| Fingers | Action |
+|---------:|--------|
+| 0 | Sit |
+| 1 | Walk |
+| 2 | Run |
+| 3 | Dance |
+| 4 | Punch |
+| 5 + Move Left/Right | Strafe |
+
+---
+
+## Tech Stack
+
+### Computer Vision & Backend
+
+- **MediaPipe** — Hand landmark detection
+- **OpenCV** — Video capture and frame processing
+- **FastAPI + Uvicorn** — MJPEG video stream server
+- **Python-SocketIO** — Real-time telemetry broadcasting
+
+### Frontend & 3D
+
+- **Three.js** — WebGL 3D viewport and character rendering
+- **GLTF/GLB** — Animated robot model and motion clips
+- **Socket.IO Client** — Live data ingestion
+- **CSS3** — Glassmorphism UI and responsive layout
+
+---
+
+## Architecture
+
+```text
+┌─────────────┐        ┌──────────────┐        ┌─────────────────┐
+│   Webcam    │ ──────▶   core.py     ───────▶│  video_server   │
+│  (OpenCV)   │        │ (MediaPipe)  │        │ (FastAPI :5000) │────────────┐
+│             │        │ (Processing) │        │ (MJPEG Stream)  │            │
+└─────────────┘        └──────┬───────┘        └─────────────────┘            │
+                              │                                               │
+                              ▼                                               │
+                     ┌──────────────┐                                         │
+                     │  robot_3d.py │──────▶ Socket.IO Server (:8765)         │
+                     │ (Socket.IO   │                 │                       │
+                     │   Client)    │                 │                       │
+                     └──────────────┘                 ▼                       │
+                                                ┌─────────────┐               │
+                                                │ robot-web/  │ ◀─────────────┘
+                                                │ Three.js UI │
+                                                └─────────────┘
+```
+
+---
+
+## Quick Start
 
 ```bash
+# 1. Setup environment
 python -m venv venv
-```
 
----
+# Linux / macOS
+source venv/bin/activate
 
-### 2. Install Dependencies
+# Windows
+venv\Scripts\activate
 
-Activate the virtual environment, then install the required packages:
-
-```bash
 pip install -r requirements.txt
-```
 
-> Make sure the file name is exactly `requirements.txt`.
+# 2. Start the Socket.IO server
+python socket_io_server.py
 
----
-
-### 3. Open the Web Interface
-
-Navigate to the project folder and open:
-
-```
-robot-web/index.html
-```
-
-Open this file with live server in vs code or any server like node js.
-
----
-
-### 4. Run Backend Services
-
-Open **two separate terminals**:
-
-#### Terminal 1 — Socket.IO Server
-
-Activate the virtual environment, then run:
-
-```bash
-py socket_io_server.py
-```
-
----
-
-#### Terminal 2 — Core Service
-
-```bash
+# 3. Start the vision pipeline
 python core.py
+
+# 4. Serve robot-web/index.html via Live Server
+
+# 5. Open the browser and wait for initialization
 ```
 
----
-
-### 5. Final Step
-
-* Refresh the web page (`index.html`)
-* Wait a few seconds for initialization
-* Any initial lag or freezing should disappear after the system stabilizes
+> **Note:** Both backend services must be running before refreshing the browser. A brief startup delay is normal while the MediaPipe model initializes.
 
 ---
 
-### Notes
+## File Overview
 
-* Both backend servers must be running before refreshing the browser
-* A short delay or slight lag at startup is normal until everything connects
+| File | Purpose |
+|------|---------|
+| `core.py` | Main vision pipeline — detection, gesture logic, frame dispatch |
+| `video_server.py` | FastAPI MJPEG streaming endpoint |
+| `socket_io_server.py` | Socket.IO hub for real-time telemetry |
+| `robot_3d.py` | Socket.IO client bridge that pushes hand data |
+| `robot-web/` | Browser-based 3D dashboard |
+| `Temp.py` | Standalone Tkinter testing utility |
 
 ---
 
-### License
+## License
 
-MIT License © 2026 Ziad Ahmed Shalaby
+This project is licensed under the **MIT License**.
 
+© 2026 **Ziad Ahmed Shalaby**
