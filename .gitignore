@@ -20,3 +20,4 @@ cython_debug/
 .pytype/
 
 robot-vid.mp4
+images
