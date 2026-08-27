@@ -106,8 +106,10 @@ python core.py
 
 ---
 
-## License
+## 📄 License
+
+Developed entirely by [Ziad Shalaby](https://github.com/ziadshalaby00).
 
 This project is licensed under the **MIT License**.
 
-© 2026 **Ziad Ahmed Shalaby**
+---
